@@ -2,7 +2,7 @@ import pytest
 from pathlib import Path
 import sys
 
-sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 
 class TestPipeline:
@@ -10,7 +10,7 @@ class TestPipeline:
 
     def test_pipeline_run_function_exists(self):
         """Validate pipeline module exports run function."""
-        from pipeline import run_automated_dubbing_pipeline
+        from src.pipeline import run_automated_dubbing_pipeline
         import inspect
 
         sig = inspect.signature(run_automated_dubbing_pipeline)
@@ -20,7 +20,7 @@ class TestPipeline:
 
     def test_pipeline_parameters_have_defaults(self):
         """Ensure pipeline accepts reasonable defaults."""
-        from pipeline import run_automated_dubbing_pipeline
+        from src.pipeline import run_automated_dubbing_pipeline
         import inspect
 
         sig = inspect.signature(run_automated_dubbing_pipeline)
@@ -30,7 +30,7 @@ class TestPipeline:
 
     def test_pipeline_module_imports_all_submodules(self):
         """Verify all pipeline dependencies are available."""
-        import pipeline
+        from src import pipeline
 
         # Should have imports for all modules
         assert hasattr(pipeline, "download_video_and_audio")
