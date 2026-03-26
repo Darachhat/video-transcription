@@ -101,7 +101,7 @@ def synthesize_khmer_tts(
         )
 
 
-def replace_video_audio(original_video_path: str, new_audio_path: str, output_video_path: str, ffmpeg_path: str = "ffmpeg") -> str:
+def replace_video_audio(original_video_path: str, new_audio_path: str, output_video_path: str, ffmpeg_path: str = "ffmpeg", music_volume: Optional[float] = None) -> str:
     """Strip original audio from video and replace with new audio track using ffmpeg."""
     orig_video = Path(original_video_path)
     new_audio = Path(new_audio_path)
@@ -145,16 +145,22 @@ def replace_video_audio(original_video_path: str, new_audio_path: str, output_vi
     if video_duration and audio_duration:
         print(f"[MERGE] Video duration: {video_duration:.2f}s, Audio duration: {audio_duration:.2f}s")
     
-    # FFmpeg command to replace audio with padding if needed
-    if video_duration and audio_duration and audio_duration < video_duration:
-        # Audio is shorter, pad it
-        pad_duration = video_duration - audio_duration + 1
+    # Background music volume filter
+    if music_volume is not None:
+        # If we have background music volume specified, we keep the original audio as background music
+        # and overlay the new TTS audio on top
+        if video_duration and audio_duration and audio_duration < video_duration:
+            pad_duration = video_duration - audio_duration + 1
+            filter_complex = f"[0:a]volume={music_volume}dB[bg];[1:a]apad=pad_dur={pad_duration}[fg];[bg][fg]amix=inputs=2:duration=first:dropout_transition=2[a]"
+        else:
+            filter_complex = f"[0:a]volume={music_volume}dB[bg];[bg][1:a]amix=inputs=2:duration=first:dropout_transition=2[a]"
+
         command = [
             ffmpeg_path,
             "-y",
             "-i", str(orig_video),
             "-i", str(new_audio),
-            "-filter_complex", f"[1:a]apad=pad_dur={pad_duration}[a]",
+            "-filter_complex", filter_complex,
             "-map", "0:v:0",
             "-map", "[a]",
             "-c:v", "copy",
@@ -163,19 +169,37 @@ def replace_video_audio(original_video_path: str, new_audio_path: str, output_vi
             str(output_video),
         ]
     else:
-        # Audio is long enough, just merge
-        command = [
-            ffmpeg_path,
-            "-y",
-            "-i", str(orig_video),
-            "-i", str(new_audio),
-            "-c:v", "copy",
-            "-c:a", "aac",
-            "-b:a", "192k",
-            "-map", "0:v:0",
-            "-map", "1:a:0",
-            str(output_video),
-        ]
+        # FFmpeg command to replace audio with padding if needed
+        if video_duration and audio_duration and audio_duration < video_duration:
+            # Audio is shorter, pad it
+            pad_duration = video_duration - audio_duration + 1
+            command = [
+                ffmpeg_path,
+                "-y",
+                "-i", str(orig_video),
+                "-i", str(new_audio),
+                "-filter_complex", f"[1:a]apad=pad_dur={pad_duration}[a]",
+                "-map", "0:v:0",
+                "-map", "[a]",
+                "-c:v", "copy",
+                "-c:a", "aac",
+                "-b:a", "192k",
+                str(output_video),
+            ]
+        else:
+            # Audio is long enough, just merge
+            command = [
+                ffmpeg_path,
+                "-y",
+                "-i", str(orig_video),
+                "-i", str(new_audio),
+                "-c:v", "copy",
+                "-c:a", "aac",
+                "-b:a", "192k",
+                "-map", "0:v:0",
+                "-map", "1:a:0",
+                str(output_video),
+            ]
 
     print(f"[MERGE] Running FFmpeg merge...")
     process = subprocess.run(command, capture_output=True, text=True)
@@ -217,6 +241,7 @@ def generate_dubbed_video(
     output_dir: str = "output",
     preserve_temp: bool = False,
     ffmpeg_path: str = "ffmpeg",
+    music_volume: Optional[float] = None,
 ) -> Dict[str, str]:
     """
     Full pipeline for generating dubbed video.
@@ -242,6 +267,7 @@ def generate_dubbed_video(
             new_audio_path=synthesized_audio,
             output_video_path=str(final_video_path),
             ffmpeg_path=ffmpeg_path,
+            music_volume=music_volume,
         )
 
         if not preserve_temp:

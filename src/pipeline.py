@@ -19,6 +19,7 @@ def run_automated_dubbing_pipeline(
     whisper_model: str = "base",
     ffmpeg_path: str = "ffmpeg",
     preserve_temp_files: bool = False,
+    music_volume: Optional[float] = None,
 ) -> Dict[str, object]:
     """Run the full automated video translation and dubbing pipeline."""
     Path(temp_dir).mkdir(parents=True, exist_ok=True)
@@ -44,6 +45,7 @@ def run_automated_dubbing_pipeline(
         output_dir=output_dir,
         preserve_temp=preserve_temp_files,
         ffmpeg_path=ffmpeg_path,
+        music_volume=music_volume,
     )
 
     return {
@@ -64,6 +66,7 @@ if __name__ == "__main__":
     parser.add_argument("--model", default="base", help="Whisper model size")
     parser.add_argument("--ffmpeg-path", default="ffmpeg", help="Path to ffmpeg executable")
     parser.add_argument("--preserve-temp", action="store_true", help="Keep temp WAV assets")
+    parser.add_argument("--music-volume", type=float, default=None, help="Adjust background music volume in dB (e.g., -20)")
 
     args = parser.parse_args()
 
@@ -74,6 +77,7 @@ if __name__ == "__main__":
         whisper_model=args.model,
         ffmpeg_path=args.ffmpeg_path,
         preserve_temp_files=args.preserve_temp,
+        music_volume=args.music_volume,
     )
 
     # Print output paths (avoid Khmer character encoding issues)

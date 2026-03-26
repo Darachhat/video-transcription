@@ -1,8 +1,8 @@
 import os
 from typing import Any, Dict
 
-import google.generativeai as genai
-
+from google import genai
+from google.genai import types
 
 import re
 
@@ -87,14 +87,14 @@ def translate_to_khmer_script(transcript: str, source_lang: str = "auto") -> Dic
     if not transcript or not transcript.strip():
         raise ValueError("Transcript cannot be empty")
 
-    # API key should be in GOOGLE_APPLICATION_CREDENTIALS env var and authenticated by SDK
-    if not os.getenv("GOOGLE_APPLICATION_CREDENTIALS"):
-        raise EnvironmentError("GOOGLE_APPLICATION_CREDENTIALS is not set in environment")
-
-    # Initialize Gemini client once per process
+    # Determine API key from environment
     api_key = os.getenv("GOOGLE_API_KEY")
-    if api_key:
-        genai.configure(api_key=api_key)
+
+    if not api_key and not os.getenv("GOOGLE_APPLICATION_CREDENTIALS"):
+        raise EnvironmentError("GOOGLE_API_KEY or GOOGLE_APPLICATION_CREDENTIALS is not set in environment")
+
+    # Initialize Gemini client
+    client = genai.Client(api_key=api_key) if api_key else genai.Client()
 
     # Split transcript into chunks intelligently
     transcript_chunks = _chunk_text(transcript, max_chunk_size=1500)
@@ -104,15 +104,16 @@ def translate_to_khmer_script(transcript: str, source_lang: str = "auto") -> Dic
 
     try:
         # Use newer Gemini API with current model
-        model = genai.GenerativeModel("gemini-2.5-pro")
+        model_name = "gemini-2.5-pro"
         
         for i, chunk in enumerate(transcript_chunks):
             print(f"[TRANSLATOR] Translating chunk {i+1}/{len(transcript_chunks)}...")
             prompt_text = _build_khmer_hook_prompt(chunk.strip(), source_lang)
             
-            response = model.generate_content(
-                prompt_text,
-                generation_config=genai.types.GenerationConfig(
+            response = client.models.generate_content(
+                model=model_name,
+                contents=prompt_text,
+                config=types.GenerateContentConfig(
                     temperature=0.3,
                     max_output_tokens=2048,
                 ),
