@@ -1,0 +1,59 @@
+/* Fonts loaded via nuxt.config.ts app.head.link (Material Symbols + Inter + JetBrains Mono) */
+
+html {
+    scroll-behavior: smooth;
+    color-scheme: dark;
+}
+
+body {
+    background-color: #0a0a0a;
+    color: #f0f0f0;
+    font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* Page transitions */
+.page-enter-active,
+.page-leave-active {
+    transition: all 0.2s ease;
+}
+.page-enter-from,
+.page-leave-to {
+    opacity: 0;
+    transform: translateY(4px);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: #111111;
+}
+::-webkit-scrollbar-thumb {
+    background: #2a2a2a;
+    border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #3a3a3a;
+}
+
+/* Accent glow utility */
+.accent-glow {
+    box-shadow: 0 0 20px rgba(124, 58, 237, 0.3);
+}
+
+/* Progress bar animation */
+@keyframes progress-indeterminate {
+    0% {
+        transform: translateX(-100%);
+    }
+    100% {
+        transform: translateX(400%);
+    }
+}
+.progress-indeterminate {
+    animation: progress-indeterminate 1.5s ease-in-out infinite;
+}

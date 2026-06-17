@@ -35,6 +35,8 @@ ENV/
 
 # Testing
 .pytest_cache/
+.pytest_tmp/
+.test_tmp/
 .coverage
 htmlcov/
 .tox/
@@ -51,3 +53,9 @@ output/
 *.wav
 *.mp4
 *.mkv
+
+mmo_front/node_modules/
+mmo_front/.nuxt/
+mmo_front/dist/
+mmo_front/.env
+mmo_front/.output/
